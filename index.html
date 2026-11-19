@@ -333,10 +333,11 @@ function route(){
   const v=(location.hash||'#home').slice(1);
   const korLink=/^kor-([che])(\d{1,2})$/.exec(v);
   const name=korLink?'sol':(['home','sol','solve','grade'].includes(v)?v:'home');
-  if(korLink&&window.openSol){openSol({c:'common',h:'hwajak',e:'eonmae'}[korLink[1]],korLink[2],true)}
+
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+name));
   document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===name));
   window.scrollTo(0,0);
+  if(korLink&&window.openSol){openSol({c:'common',h:'hwajak',e:'eonmae'}[korLink[1]],korLink[2],true)}
 }
 addEventListener('hashchange',route); route();
 
@@ -590,7 +591,7 @@ window.openSol=(part,n,scroll)=>{
     <h3>선지 체크</h3>${it.choices.map(c=>`<div class="choice${c.correct?' right':''}"><div class="n">${CIRC[+c.choice]}</div><div>${esc(c.reason)}</div></div>`).join('')}
     ${it.pitfalls?`<h3>주의</h3><p style="margin:0;font-size:14px">${esc(it.pitfalls)}</p>`:''}
     <div class="solnav">${prev?`<a class="btn ghost" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="#kor-${part[0]}${prev.number}">← ${prev.number}번</a>`:''}${next?`<a class="btn ghost" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="#kor-${part[0]}${next.number}">${next.number}번 →</a>`:''}</div>`;
-  if(scroll&&matchMedia('(max-width:859px)').matches)$('#solview').scrollIntoView({behavior:'smooth',block:'start'});
+  if(scroll&&matchMedia('(max-width:859px)').matches)requestAnimationFrame(()=>{const y=$('#solview').getBoundingClientRect().top+scrollY-64;scrollTo({top:y,behavior:'smooth'})});
 };
 drawQgrid();
 route();
