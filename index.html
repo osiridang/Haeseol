@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수능 해설 AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16181d; --ink2:#4a4f5a; --ink3:#878d99; --line:#e3e5ea; --paper:#fbfaf7; --card:#fff;
+  --accent:#1f4fd8; --accent-soft:#eaf0ff; --good:#178a4c; --good-soft:#e6f5ec; --warn:#b45309; --warn-soft:#fdf2e2; --bad:#c2312f; --bad-soft:#fdeceb;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#eceef2;--ink2:#b4b9c4;--ink3:#7f8592;--line:#2d313a;--paper:#121419;--card:#1a1d24;--accent:#7aa2ff;--accent-soft:#1d2840;--good:#4cc38a;--good-soft:#16291f;--warn:#f0a646;--warn-soft:#2d2314;--bad:#ff7b72;--bad-soft:#2f1a1a}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6}
+a{color:var(--accent)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
+.bar{display:flex;align-items:center;gap:16px;height:60px}
+.logo{font-family:'Noto Serif KR',serif;font-weight:900;font-size:20px;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+nav{display:flex;gap:4px;margin-left:auto}
+nav a{padding:8px 14px;border-radius:999px;text-decoration:none;color:var(--ink2);font-weight:500;font-size:14px}
+nav a.on{background:var(--ink);color:var(--paper)}
+.hero{padding:44px 0 20px}
+.eyebrow{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+h1{font-family:'Noto Serif KR',serif;font-size:clamp(28px,4.4vw,42px);line-height:1.25;margin:8px 0 12px;letter-spacing:-1px}
+.lead{color:var(--ink2);max-width:640px;margin:0}
+section.view{display:none;padding-bottom:64px}
+section.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+h2{font-size:18px;margin:0 0 4px}
+.sub{color:var(--ink3);font-size:13px;margin:0 0 16px}
+.grid{display:grid;gap:16px}
+@media(min-width:860px){.g2{grid-template-columns:1fr 1fr}.g-solve{grid-template-columns:380px 1fr}}
+/* schedule */
+.sched{display:grid;gap:10px;margin-top:8px}
+@media(min-width:760px){.sched{grid-template-columns:repeat(5,1fr)}}
+.period{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card);position:relative}
+.period .no{font-size:12px;color:var(--ink3);font-weight:700}
+.period .nm{font-size:17px;font-weight:700;margin:2px 0}
+.period .tm{font-size:13px;color:var(--ink2)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;margin-top:10px}
+.pill.open{background:var(--good-soft);color:var(--good)}
+.pill.wait{background:var(--line);color:var(--ink2)}
+.pill.next{background:var(--accent-soft);color:var(--accent)}
+.period.is-next{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.period a.go{display:block;font-size:13px;margin-top:8px}
+.note{font-size:13px;color:var(--ink3);margin-top:12px}
+.steps3{display:grid;gap:12px;margin-top:20px}
+@media(min-width:760px){.steps3{grid-template-columns:repeat(3,1fr)}}
+.step{padding:16px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.step b{display:block;margin-bottom:4px}
+.step p{margin:0;font-size:14px;color:var(--ink2)}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+/* form */
+label.lb{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
+select,input[type=text],textarea{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.btn{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:10px;padding:11px 18px;cursor:pointer;background:var(--accent);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.small{font-size:13px;padding:7px 12px}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--ink3);font-size:14px;cursor:pointer;background:var(--paper)}
+.drop.over{border-color:var(--accent);color:var(--accent)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumb{position:relative}
+.thumb img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.thumb button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);cursor:pointer;font-size:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--line);color:var(--ink2)}
+.chip.a{background:var(--accent-soft);color:var(--accent)}
+/* result */
+.empty{color:var(--ink3);text-align:center;padding:60px 20px;font-size:14px}
+.ans{display:flex;align-items:center;gap:16px;padding:16px;border-radius:12px;background:var(--accent-soft);margin:14px 0}
+.ans .big{font-family:'Noto Serif KR',serif;font-size:40px;font-weight:900;color:var(--accent);line-height:1;min-width:56px;text-align:center}
+.ans .t{font-size:13px;color:var(--ink2)}
+.verdict{padding:12px 14px;border-radius:10px;font-size:14px;font-weight:500;margin:10px 0}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.no{background:var(--bad-soft);color:var(--bad)}
+.verdict.hm{background:var(--warn-soft);color:var(--warn)}
+.res h3{font-size:15px;margin:22px 0 8px}
+.res ol{padding-left:22px;margin:0}
+.res ol li{margin:6px 0}
+.choice{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.choice .n{font-weight:900;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:13px}
+.choice.right .n{background:var(--good);color:#fff}
+.key{padding:12px 14px;border-left:3px solid var(--accent);background:var(--paper);border-radius:0 10px 10px 0;font-size:14px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.stream{white-space:pre-wrap;font-size:13px;color:var(--ink3);max-height:220px;overflow:auto;background:var(--paper);border-radius:10px;padding:12px}
+/* grading */
+.score{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+.score .k{flex:1;min-width:120px;padding:14px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.score .k b{display:block;font-size:28px;font-family:'Noto Serif KR',serif}
+.score .k span{font-size:12px;color:var(--ink3)}
+.omr{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.cell{border:1px solid var(--line);border-radius:8px;padding:6px 4px;text-align:center;font-size:12px;cursor:default}
+.cell b{display:block;font-size:15px}
+.cell.x{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);cursor:pointer}
+.cell.o{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.hist{display:grid;gap:8px}
+.hitem{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14px;background:var(--card)}
+.hitem .s{color:var(--ink3);font-size:12px;margin-left:auto}
+footer{border-top:1px solid var(--line);padding:22px 0;color:var(--ink3);font-size:12px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <div class="logo">수능<span>해설</span> AI</div>
+  <nav>
+    <a href="#home" data-v="home">오늘 일정</a>
+    <a href="#solve" data-v="solve">AI 풀이</a>
+    <a href="#grade" data-v="grade">가채점</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<!-- HOME -->
+<section class="view" id="v-home">
+  <div class="hero">
+    <div class="eyebrow">2027학년도 대학수학능력시험 · 2026년 11월 19일(목)</div>
+    <h1>문제가 공개되면,<br>바로 풀이와 해설로.</h1>
+    <p class="lead">교시가 끝나 한국교육과정평가원에 문제지가 올라오면, 문항을 캡처해 올리세요. AI가 단계별 풀이·선지별 오답 이유·핵심 개념을 정리하고, 공식 정답과 대조해 줍니다.</p>
+  </div>
+  <div class="card">
+    <h2>교시별 문제·정답 공개 시각</h2>
+    <p class="sub" id="nowline">한국 시간 기준</p>
+    <div class="sched" id="sched"></div>
+    <p class="note">중증 시각장애 수험생 시험 종료 후 <a href="https://www.suneung.re.kr" target="_blank" rel="noopener">평가원 수능 홈페이지(suneung.re.kr)</a>에 순차 공개 · 최종 정답 확정 12월 1일 · 성적 통지 12월 11일</p>
+  </div>
+  <div class="steps3">
+    <div class="step"><b>1. 문제지 받기</b><p>평가원 홈페이지에서 영역별 문제지 PDF를 엽니다.</p></div>
+    <div class="step"><b>2. 문항 캡처·업로드</b><p>풀고 싶은 문항을 캡처해 붙여넣거나 끌어다 놓습니다.</p></div>
+    <div class="step"><b>3. 해설 + 정답 대조</b><p>공식 정답을 넣으면 AI 답과 자동 대조해 일치 여부를 표시합니다.</p></div>
+  </div>
+  <div class="cta">
+    <a class="btn" href="#solve" style="text-decoration:none">문항 풀이 시작</a>
+    <a class="btn ghost" href="#grade" style="text-decoration:none">가채점 하기</a>
+  </div>
+</section>
+
+<!-- SOLVE -->
+<section class="view" id="v-solve">
+  <div class="hero" style="padding-bottom:16px">
+    <div class="eyebrow">AI 풀이</div>
+    <h1 style="font-size:30px">문항을 올리면 풀이를 정리합니다</h1>
+  </div>
+  <div class="grid g-solve">
+    <div class="card">
+      <div class="row">
+        <div><label class="lb" for="subj">영역·과목</label>
+          <select id="subj">
+            <option>국어</option><option selected>수학</option><option>영어</option><option>한국사</option>
+            <option>사회탐구</option><option>과학탐구</option><option>직업탐구</option><option>제2외국어/한문</option>
+          </select></div>
+        <div><label class="lb" for="qno">문항 번호</label><input id="qno" type="text" placeholder="예: 22"></div>
+      </div>
+      <label class="lb">문항 이미지</label>
+      <div class="drop" id="drop" tabindex="0">클릭해서 선택 · 끌어다 놓기 · Ctrl+V 붙여넣기<br><span style="font-size:12px">지문과 문항이 여러 장이면 모두 올리세요</span></div>
+      <input type="file" id="file" accept="image/*" multiple class="hide">
+      <div class="thumbs" id="thumbs"></div>
+      <label class="lb" for="qtext">또는 문항 텍스트 (선택)</label>
+      <textarea id="qtext" placeholder="문항·선지를 직접 입력해도 됩니다"></textarea>
+      <label class="lb" for="official">공식 정답 (선택)</label>
+      <input id="official" type="text" placeholder="예: ③ 또는 3, 단답형은 숫자">
+      <p class="note" style="margin-top:6px">넣으면 AI 답과 대조합니다. 평가원 정답표에서 확인하세요.</p>
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="btn" id="go" style="flex:1">풀이 생성</button>
+        <button class="btn ghost" id="clear">초기화</button>
+      </div>
+      <p class="note hide" id="noai">이 화면에서는 AI 호출을 사용할 수 없습니다. claude.ai에서 페이지를 열어 주세요.</p>
+    </div>
+    <div class="card res" id="result">
+      <div class="empty" id="empty">왼쪽에서 문항을 올리고 <b>풀이 생성</b>을 누르세요.<br>풀이 결과가 여기에 표시됩니다.</div>
+      <div id="out"></div>
+      <div id="hist-wrap" class="hide" style="margin-top:28px">
+        <h3>저장된 해설</h3>
+        <p class="note" id="hist-status" style="margin:-4px 0 10px">이 브라우저에 저장된 기록</p>
+        <div class="hist" id="hist"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GRADE -->
+<section class="view" id="v-grade">
+  <div class="hero" style="padding-bottom:16px">
+    <div class="eyebrow">가채점</div>
+    <h1 style="font-size:30px">수험표 뒤에 적은 답으로 맞춰 보기</h1>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <label class="lb" for="gsubj">영역</label>
+      <select id="gsubj"></select>
+      <label class="lb" for="key">공식 정답 (번호 순서대로)</label>
+      <textarea id="key" placeholder="예: 3 5 1 2 4 ... 또는 35124...  (단답형은 쉼표로: 3,5,1,...,12,250)"></textarea>
+      <label class="lb" for="mine">내 답</label>
+      <textarea id="mine" placeholder="같은 형식으로 입력"></textarea>
+      <label class="lb" for="pts">배점 (선택)</label>
+      <input id="pts" type="text" placeholder="문항별 배점, 예: 2 2 3 2 ... — 비우면 맞은 개수만 계산">
+      <div style="margin-top:16px"><button class="btn" id="gbtn" style="width:100%">채점하기</button></div>
+    </div>
+    <div class="card">
+      <div id="gout" class="empty">정답과 내 답을 입력하고 <b>채점하기</b>를 누르세요.<br>틀린 문항을 누르면 AI 풀이로 이동합니다.</div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  AI 풀이는 틀릴 수 있습니다. 공식 정답과 다르면 반드시 다시 확인하세요. · 수능 문항의 저작권은 한국교육과정평가원에 있습니다. 올린 이미지는 풀이 요청에만 쓰이고 저장되지 않습니다. 저장되는 것은 AI가 만든 풀이 텍스트뿐입니다. · 문제지·정답: <a href="https://www.suneung.re.kr" target="_blank" rel="noopener">suneung.re.kr</a>
+</div></footer>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- routing ---------- */
+function route(){
+  const v=(location.hash||'#home').slice(1);
+  const name=['home','solve','grade'].includes(v)?v:'home';
+  document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+name));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===name));
+  window.scrollTo(0,0);
+}
+addEventListener('hashchange',route); route();
+
+/* ---------- schedule ---------- */
+const PERIODS=[
+  {no:'1교시',nm:'국어',h:10,m:56},
+  {no:'2교시',nm:'수학',h:14,m:10},
+  {no:'3교시',nm:'영어',h:17,m:4},
+  {no:'4교시',nm:'한국사·탐구',h:20,m:10},
+  {no:'5교시',nm:'제2외국어/한문',h:20,m:20},
+];
+const EXAM={y:2026,mo:11,d:19};
+function kstMs(h,m){return Date.UTC(EXAM.y,EXAM.mo-1,EXAM.d,h-9,m)}
+function fmtLeft(ms){const t=Math.ceil(ms/60000),h=Math.floor(t/60),m=t%60;return h?`${h}시간 ${m}분 후`:`${m}분 후`}
+function renderSched(){
+  const now=Date.now();
+  const k=new Date(now+9*3600e3);
+  $('#nowline').textContent=`현재 한국 시간 ${k.getUTCMonth()+1}월 ${k.getUTCDate()}일 ${String(k.getUTCHours()).padStart(2,'0')}:${String(k.getUTCMinutes()).padStart(2,'0')}`;
+  let nextIdx=PERIODS.findIndex(p=>kstMs(p.h,p.m)>now);
+  $('#sched').innerHTML=PERIODS.map((p,i)=>{
+    const t=kstMs(p.h,p.m),open=now>=t,isNext=i===nextIdx;
+    const pill=open?'<span class="pill open">공개됨</span>':isNext?`<span class="pill next">${fmtLeft(t-now)}</span>`:'<span class="pill wait">공개 전</span>';
+    return `<div class="period${isNext?' is-next':''}"><div class="no">${p.no}</div><div class="nm">${p.nm}</div><div class="tm">${String(p.h).padStart(2,'0')}:${String(p.m).padStart(2,'0')} 이후</div>${pill}${open?'<a class="go" href="https://www.suneung.re.kr" target="_blank" rel="noopener">문제지 보러 가기 →</a>':''}</div>`;
+  }).join('');
+}
+renderSched(); setInterval(renderSched,30000);
+
+/* ---------- images ---------- */
+let images=[];
+const drop=$('#drop'),file=$('#file');
+drop.onclick=()=>file.click();
+drop.onkeydown=e=>{if(e.key==='Enter')file.click()};
+file.onchange=()=>{addFiles(file.files);file.value=''};
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');addFiles(e.dataTransfer.files)};
+addEventListener('paste',e=>{
+  if(!$('#v-solve').classList.contains('on'))return;
+  const fs=[...(e.clipboardData?.items||[])].filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile());
+  if(fs.length){e.preventDefault();addFiles(fs)}
+});
+function addFiles(list){
+  for(const f of list){if(f&&f.type.startsWith('image/')&&images.length<6)images.push({blob:f,url:URL.createObjectURL(f)})}
+  drawThumbs();
+}
+function drawThumbs(){
+  $('#thumbs').innerHTML=images.map((im,i)=>`<div class="thumb"><img src="${im.url}" alt="문항 이미지 ${i+1}"><button data-i="${i}" aria-label="삭제">✕</button></div>`).join('');
+  $('#thumbs').querySelectorAll('button').forEach(b=>b.onclick=()=>{URL.revokeObjectURL(images[b.dataset.i].url);images.splice(b.dataset.i,1);drawThumbs()});
+}
+$('#clear').onclick=()=>{images.forEach(i=>URL.revokeObjectURL(i.url));images=[];drawThumbs();$('#qtext').value='';$('#official').value='';$('#qno').value='';$('#out').innerHTML='';$('#empty').classList.remove('hide')};
+
+/* ---------- AI ---------- */
+let sample=null, imgOK=false;
+(async()=>{
+  try{sample=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){sample=null}
+  if(!sample){$('#noai').classList.remove('hide');$('#go').disabled=true;return}
+  try{imgOK=!!(await sample.limits()).images}catch(e){imgOK=false}
+})();
+
+const norm=s=>{
+  s=String(s??'').trim();
+  const circ={'①':'1','②':'2','③':'3','④':'4','⑤':'5'};
+  s=s.replace(/[①-⑤]/g,c=>circ[c]).replace(/번$/,'').replace(/\s+/g,'');
+  return s;
+};
+
+function buildPrompt(subj,no,text,extra){
+  return `너는 대한민국 대학수학능력시험(수능) 전문 해설 강사다. 2027학년도 수능 ${subj} 영역${no?` ${no}번`:''} 문항을 풀고 수험생용 해설을 만든다.
+${images.length?'첨부 이미지에 문항(필요하면 지문 포함)이 있다.':''}${text?`\n[문항 텍스트]\n${text}`:''}${extra?`\n[추가 지시]\n${extra}`:''}
+
+규칙:
+- 반드시 스스로 끝까지 풀어 답을 정한다. 계산은 검산한다.
+- 수식은 LaTeX 대신 읽기 쉬운 유니코드 텍스트로 쓴다 (예: x², √3, ∫₀¹ f(x)dx, ≤).
+- 이미지가 흐리거나 잘려 확실히 읽을 수 없으면 unreadable에 이유를 쓰고 confidence를 낮춘다.
+- 오지선다가 아니면 choices는 빈 배열.
+- 모든 문장은 한국어, 고등학생이 이해할 수 있게 간결하게.
+
+아래 JSON만 출력:
+{"number":"문항 번호 또는 빈 문자열","subject":"과목(선택과목까지)","unit":"단원","type":"문항 유형","difficulty":1~5 정수,"answer":"정답 (선지 번호 숫자 또는 단답 값)","confidence":0~1,"keyIdea":"핵심 아이디어 한두 문장","steps":["단계별 풀이 문장", "..."],"choices":[{"choice":"1","correct":true/false,"reason":"맞는/틀린 이유"}],"pitfalls":"자주 하는 실수","timeTip":"시간 단축 팁","unreadable":""}`;
+}
+
+let running=null;
+$('#go').onclick=()=>solve();
+async function solve(extra){
+  if(!sample)return;
+  const subj=$('#subj').value,no=$('#qno').value.trim(),text=$('#qtext').value.trim(),official=$('#official').value.trim();
+  if(!images.length&&!text){$('#out').innerHTML='<div class="verdict hm">문항 이미지나 텍스트를 넣어 주세요.</div>';$('#empty').classList.add('hide');return}
+  if(images.length&&!imgOK){$('#out').innerHTML='<div class="verdict hm">이 환경에서는 이미지 입력을 쓸 수 없습니다. 문항 텍스트를 입력해 주세요.</div>';$('#empty').classList.add('hide');return}
+  running?.abort(); running=new AbortController();
+  $('#empty').classList.add('hide');
+  $('#go').disabled=true;
+  $('#out').innerHTML='<div class="verdict hm"><span class="spin"></span>문항을 읽고 풀고 있어요… 수학 킬러 문항은 1분 넘게 걸릴 수 있어요.</div><div class="stream" id="stream">생각 중…</div>';
+  try{
+    const opts={signal:running.signal,modelTier:'complex',onText:({text})=>{const s=$('#stream');if(s){s.textContent=text;s.scrollTop=s.scrollHeight}}};
+    if(images.length)opts.images=images.map(i=>i.blob);
+    const r=await sample.json(buildPrompt(subj,no,text,extra),opts);
+    if(!r||typeof r!=='object')throw {message:'응답을 해석하지 못했습니다'};
+    if(!r.number&&no)r.number=no;
+    r._subj=subj; r._official=official; r._at=Date.now();
+    renderResult(r); saveHist(r);
+  }catch(e){
+    if(e?.name==='AbortError')return;
+    const msg=e?.code==='not_granted'?'AI 사용 권한이 허용되지 않았습니다.':e?.code==='rate_limited'?'요청이 많습니다. 잠시 후 다시 시도해 주세요.':(e?.message||'풀이 중 오류가 났습니다.');
+    $('#out').innerHTML=`<div class="verdict no">${esc(msg)}</div>`;
+  }finally{$('#go').disabled=false}
+}
+
+function renderResult(r){
+  const off=r._official, aiA=norm(r.answer), offA=norm(off);
+  let verdict='';
+  if(offA){
+    verdict=aiA===offA
+      ?`<div class="verdict ok">✓ 공식 정답(${esc(off)})과 일치합니다.</div>`
+      :`<div class="verdict no">✕ 공식 정답은 ${esc(off)}인데 AI 답은 ${esc(r.answer)}입니다. 이 해설은 믿지 마세요. <button class="btn small" id="redo" style="margin-left:6px">정답 기준으로 다시 풀기</button></div>`;
+  }else{
+    verdict=`<div class="verdict hm">공식 정답을 넣지 않아 대조하지 않았습니다. 평가원 정답표로 꼭 확인하세요.</div>`;
+  }
+  const conf=Math.round((+r.confidence||0)*100);
+  const diff='★'.repeat(Math.max(0,Math.min(5,+r.difficulty||0)))+'☆'.repeat(5-Math.max(0,Math.min(5,+r.difficulty||0)));
+  const choices=(r.choices||[]).map(c=>`<div class="choice${c.correct?' right':''}"><div class="n">${esc(c.choice)}</div><div>${esc(c.reason)}</div></div>`).join('');
+  $('#out').innerHTML=`
+    <div class="chips"><span class="chip a">${esc(r.subject||r._subj)}</span>${r.number?`<span class="chip">${esc(r.number)}번</span>`:''}${r.unit?`<span class="chip">${esc(r.unit)}</span>`:''}${r.type?`<span class="chip">${esc(r.type)}</span>`:''}<span class="chip" title="추정 난도">${diff}</span></div>
+    <div class="ans"><div class="big">${esc(r.answer)}</div><div><b>AI 답</b><div class="t">확신도 ${conf}%${r.unreadable?` · 읽기 문제: ${esc(r.unreadable)}`:''}</div></div></div>
+    ${verdict}
+    ${r.keyIdea?`<h3>핵심 아이디어</h3><div class="key">${esc(r.keyIdea)}</div>`:''}
+    ${(r.steps||[]).length?`<h3>단계별 풀이</h3><ol>${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:''}
+    ${choices?`<h3>선지별 분석</h3>${choices}`:''}
+    ${r.pitfalls?`<h3>자주 하는 실수</h3><p style="margin:0;font-size:14px">${esc(r.pitfalls)}</p>`:''}
+    ${r.timeTip?`<h3>시간 단축 팁</h3><p style="margin:0;font-size:14px">${esc(r.timeTip)}</p>`:''}
+    <div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="btn ghost small" id="copy">해설 복사</button><span class="note hide" id="savemsg" style="margin:0"></span></div>`;
+  $('#redo')&&($('#redo').onclick=()=>solve(`공식 정답은 ${off}이다. 이전 풀이는 ${r.answer}로 틀렸다. 처음부터 다시 풀어 왜 ${off}가 되는지 보이고, 이전 풀이가 어디서 틀리기 쉬운지 pitfalls에 적어라. 끝까지 풀어도 ${off}가 나오지 않으면 그 사실을 unreadable에 솔직히 적어라.`));
+  $('#copy').onclick=async()=>{
+    const t=`[${r.subject||r._subj} ${r.number||''}번] 정답 ${r.answer}\n핵심: ${r.keyIdea||''}\n\n풀이:\n${(r.steps||[]).map((s,i)=>`${i+1}. ${s}`).join('\n')}\n\n${(r.choices||[]).map(c=>`${c.choice}번: ${c.reason}`).join('\n')}`;
+    try{await navigator.clipboard.writeText(t);$('#copy').textContent='복사됨'}catch(e){$('#copy').textContent='복사 실패'}
+  };
+}
+
+/* history: server (db) when available, else this browser only */
+const SUBJ_CODE={'국어':'kor','수학':'math','영어':'eng','한국사':'hist','사회탐구':'soc','과학탐구':'sci','직업탐구':'voc','제2외국어/한문':'lang'};
+let db=null, serverRows=null, canWrite=true;
+(async()=>{
+  try{db=window.claude&&window.claude.use?await window.claude.use('db'):null}catch(e){db=null}
+  if(!db)return;
+  const st=$('#hist-status'); st.textContent='서버에서 불러오는 중…';
+  const timer=setTimeout(()=>{st.textContent='서버에 아직 연결되지 않았어요. 이 브라우저 기록을 보여줍니다.'},10000);
+  db.collection('solutions').orderBy('_at','desc').limit(200).onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){clearTimeout(timer)}
+    serverRows=snap.docs.map(d=>({...d.data(),_id:d.id}));
+    st.textContent=`서버에 저장된 해설 ${serverRows.length}개 · 공유받은 사람도 볼 수 있어요`;
+    drawHist();
+  },err=>{clearTimeout(timer);serverRows=null;st.textContent='서버 기록을 불러오지 못했어요. 이 브라우저 기록을 보여줍니다.';drawHist()});
+})();
+function getHist(){
+  if(serverRows)return serverRows;
+  try{return JSON.parse(localStorage.getItem('sn-hist')||'[]')}catch(e){return []}
+}
+async function saveHist(r){
+  const rec=JSON.parse(JSON.stringify(r));
+  if(db&&canWrite){
+    const num=String(r.number||'').replace(/[^0-9A-Za-z]/g,'');
+    const id=num?`y2027-${SUBJ_CODE[r._subj]||'etc'}-${num}`:undefined;
+    try{await db.collection('solutions').doc(id).set(rec);flash('서버에 저장했어요'+(num?' (같은 과목·번호는 최신 풀이로 덮어씀)':''));return}
+    catch(e){
+      if(e?.code==='invalid_argument'){canWrite=false;flash('보기 권한만 있어 서버에 저장하지 못했어요. 이 브라우저에만 저장합니다.')}
+      else if(e?.code==='quota_exceeded'){flash('서버 저장 공간이 가득 찼어요.')}
+      else flash('서버 저장에 실패해 이 브라우저에만 저장했어요.');
+    }
+  }
+  try{const h=[rec,...JSON.parse(localStorage.getItem('sn-hist')||'[]')].slice(0,12);localStorage.setItem('sn-hist',JSON.stringify(h))}catch(e){}
+  drawHist();
+}
+function flash(t){const s=$('#savemsg');if(s){s.textContent=t;s.classList.remove('hide')}}
+function drawHist(){
+  const h=getHist(); $('#hist-wrap').classList.toggle('hide',!h.length&&!db);
+  $('#hist').innerHTML=h.map((r,i)=>{const ok=r._official?(norm(r._official)===norm(r.answer)?'✓':'✕'):'·';return `<div class="hitem" data-i="${i}"><b>${ok}</b> ${esc(r.subject||r._subj)} ${esc(r.number||'')}${r.number?'번':''} → ${esc(r.answer)}<span class="s">${new Date(r._at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span></div>`}).join('');
+  $('#hist').querySelectorAll('.hitem').forEach(el=>el.onclick=()=>{$('#empty').classList.add('hide');renderResult(getHist()[el.dataset.i]);$('#result').scrollIntoView({behavior:'smooth'})});
+}
+drawHist();
+
+/* ---------- grading ---------- */
+const GS=[['국어',45],['수학',30],['영어',45],['한국사',20],['탐구 (과목당)',20],['제2외국어/한문',30]];
+$('#gsubj').innerHTML=GS.map(([n,c])=>`<option value="${n}">${n} · ${c}문항</option>`).join('');
+function parseAns(s){
+  s=s.trim(); if(!s)return [];
+  s=s.replace(/[①-⑤]/g,c=>({'①':'1','②':'2','③':'3','④':'4','⑤':'5'}[c]));
+  if(/[,\s]/.test(s))return s.split(/[,\s]+/).filter(Boolean);
+  return s.split('');
+}
+$('#gbtn').onclick=()=>{
+  const key=parseAns($('#key').value),mine=parseAns($('#mine').value),pts=parseAns($('#pts').value).map(Number);
+  const out=$('#gout');
+  if(!key.length){out.className='';out.innerHTML='<div class="verdict hm">공식 정답을 입력해 주세요.</div>';return}
+  const usePts=pts.length===key.length&&pts.every(n=>n>0);
+  let right=0,score=0,total=0;const wrong=[];
+  const cells=key.map((k,i)=>{const m=mine[i]??'';const ok=m!==''&&norm(m)===norm(k);if(usePts){total+=pts[i];if(ok)score+=pts[i]}if(ok)right++;else wrong.push(i+1);
+    return `<div class="cell ${ok?'o':'x'}" data-n="${i+1}" title="${ok?'정답':'오답 · 눌러서 풀이'}">${i+1}<b>${esc(m||'–')}</b>${ok?'':`<span>정답 ${esc(k)}</span>`}</div>`}).join('');
+  out.className='';
+  out.innerHTML=`<h2>${esc($('#gsubj').value)} 가채점 결과</h2>
+    <div class="score"><div class="k"><b>${right} / ${key.length}</b><span>맞은 문항</span></div>${usePts?`<div class="k"><b>${score}<small style="font-size:14px"> / ${total}</small></b><span>원점수</span></div>`:''}<div class="k"><b>${wrong.length}</b><span>틀린 문항</span></div></div>
+    ${mine.length!==key.length?`<div class="verdict hm">정답 ${key.length}개, 내 답 ${mine.length}개로 개수가 다릅니다. 순서를 확인하세요.</div>`:''}
+    <div class="omr">${cells}</div>
+    <p class="note">원점수입니다. 국어·수학·탐구는 표준점수·백분위·등급으로 통지됩니다(12월 11일). 틀린 문항을 누르면 AI 풀이로 이동합니다.</p>`;
+  out.querySelectorAll('.cell.x').forEach(c=>c.onclick=()=>{
+    const g=$('#gsubj').value;const map={'국어':'국어','수학':'수학','영어':'영어','한국사':'한국사','제2외국어/한문':'제2외국어/한문'};
+    $('#subj').value=map[g]||'사회탐구';$('#qno').value=c.dataset.n;$('#official').value=key[c.dataset.n-1];location.hash='solve';
+  });
+};
+</script>
+</body>
+</html>
