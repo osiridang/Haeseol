@@ -284,8 +284,8 @@ $('#startbtn').onclick=()=>startGame();
 async function layoutReel(){
   const reel=$('#reel'), box=$('#segs'); box.innerHTML=''; $('#reelload').classList.remove('hide');
   const W=reel.clientWidth; const colW=COL[0][1]-COL[0][0];
-  scale=(W*zoom)/colW; segs=segList().map(s=>({...s}));
-  segs.forEach((s,i)=>{const c=document.createElement('canvas');const w=Math.round((COL[s.c][1]-COL[s.c][0])*scale);
+  scale=(Math.floor(W*zoom)-1)/colW; reel.style.overflowX=zoom>1?'auto':'hidden'; segs=segList().map(s=>({...s}));
+  segs.forEach((s,i)=>{const c=document.createElement('canvas');const w=Math.floor((COL[s.c][1]-COL[s.c][0])*scale);
     c.style.width=w+'px';c.style.height=Math.round((Y1-topOf(s.p))*scale)+'px';c.className='seg';c.dataset.i=i;s.el=c;s.done=false;box.appendChild(c)});
   $('#reelload').classList.add('hide');
   const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)renderSeg(+e.target.dataset.i)}),{root:reel,rootMargin:'600px 0px'});
