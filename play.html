@@ -82,6 +82,9 @@ a{color:var(--acc)}
 .burst{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);font-size:44px;font-weight:900;color:var(--gold);text-shadow:0 4px 24px rgba(0,0,0,.5);opacity:0;pointer-events:none;z-index:20}
 .burst.go{animation:burst .9s ease-out}
 @keyframes burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+.zhint{position:fixed;left:50%;top:30%;transform:translateX(-50%);background:rgba(15,17,23,.85);color:#fff;font-weight:800;padding:8px 14px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:25}
+.zhint.on{opacity:1}
+#segs{will-change:transform}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
 /* sheet (OMR drawer) */
@@ -180,6 +183,7 @@ a{color:var(--acc)}
     </div>
   </div>
   <div class="burst" id="burst"></div>
+  <div class="zhint" id="zhint">100%</div>
 </section>
 
 <!-- OMR sheet -->
@@ -284,7 +288,8 @@ $('#startbtn').onclick=()=>startGame();
 async function layoutReel(){
   const reel=$('#reel'), box=$('#segs'); box.innerHTML=''; $('#reelload').classList.remove('hide');
   const W=reel.clientWidth; const colW=COL[0][1]-COL[0][0];
-  scale=(Math.floor(W*zoom)-1)/colW; reel.style.overflowX=zoom>1?'auto':'hidden'; segs=segList().map(s=>({...s}));
+  const base=Math.min(W,760)-1;            // wide screens start at a readable column width
+  scale=Math.floor(base*zoom)/colW; reel.style.overflowX=(colW*scale>W)?'auto':'hidden'; segs=segList().map(s=>({...s}));
   segs.forEach((s,i)=>{const c=document.createElement('canvas');const w=Math.floor((COL[s.c][1]-COL[s.c][0])*scale);
     c.style.width=w+'px';c.style.height=Math.round((Y1-topOf(s.p))*scale)+'px';c.className='seg';c.dataset.i=i;s.el=c;s.done=false;box.appendChild(c)});
   $('#reelload').classList.add('hide');
@@ -293,20 +298,40 @@ async function layoutReel(){
 }
 async function renderSeg(i){
   const s=segs[i]; if(!s||s.done||!pdf)return; s.done=true;
-  const page=await pdf.getPage(s.p); const dpr=Math.min(window.devicePixelRatio||1,2.5); const sc=scale*dpr;
+  const page=await pdf.getPage(s.p); const dpr=Math.min(window.devicePixelRatio||1,2.5); const sc=Math.min(scale*dpr,3200/(COL[s.c][1]-COL[s.c][0]));
   const vp=page.getViewport({scale:sc}); const c=s.el;
   const T=topOf(s.p); c.width=Math.round((COL[s.c][1]-COL[s.c][0])*sc); c.height=Math.round((Y1-T)*sc);
   await page.render({canvasContext:c.getContext('2d'),viewport:vp,transform:[1,0,0,1,-COL[s.c][0]*sc,-T*sc]}).promise;
 }
 function segIndex(p,c){return segs.findIndex(s=>s.p===p&&s.c===c)}
 function yOf(p,c,y){const i=segIndex(p,c);if(i<0)return 0;return segs[i].el.offsetTop+segs[i].el.clientTop+(y-topOf(p)-10)*scale}
-function scrollToQ(smooth){const q=Qs[idx],L=q.lay;const y=yOf(L.p,L.c,L.y);$('#reel').scrollTo({top:y,behavior:smooth?'smooth':'auto'});const m=$('#mark');m.style.top=(y+10*scale)+'px';m.style.height=(22*scale)+'px'}
+function scrollToQ(smooth){const q=Qs[idx],L=q.lay;const y=yOf(L.p,L.c,L.y);$('#reel').scrollTo({top:y,behavior:smooth?'smooth':'auto'});const m=$('#mark');m.style.top=(y+10*scale)+'px';m.style.height=(22*scale)+'px';markX(L)}
+function markX(L){const i=segIndex(L.p,L.c);if(i>=0)$('#mark').style.left=Math.max(0,segs[i].el.offsetLeft-5)+'px'}
 $('#tq').onclick=()=>scrollToQ(true);
 $('#tpass').onclick=()=>{const L=Qs[idx].lay;if(!L.s)return;$('#reel').scrollTo({top:yOf(L.s.p,L.s.c,L.s.y),behavior:'smooth'})};
-async function rezoom(f){const reel=$('#reel');const ratio=reel.scrollTop/Math.max(1,reel.scrollHeight);zoom=Math.min(2.2,Math.max(1,zoom*f));await layoutReel();reel.scrollTop=ratio*reel.scrollHeight}
+const ZMIN=0.5, ZMAX=3;
+/* remember which point of the exam is at the top-left of the view, so zooming keeps your place */
+function anchor(){const reel=$('#reel'),st=reel.scrollTop;let i=segs.findIndex((s,k)=>k===segs.length-1||segs[k+1].el.offsetTop>st);if(i<0)i=0;const s=segs[i];
+  return {p:s.p,c:s.c,y:topOf(s.p)+(st-s.el.offsetTop-s.el.clientTop)/scale,fx:reel.scrollWidth>reel.clientWidth?(reel.scrollLeft+reel.clientWidth/2)/reel.scrollWidth:.5}}
+function restore(a){const reel=$('#reel');reel.scrollTop=yOf(a.p,a.c,a.y)+10*scale;reel.scrollLeft=a.fx*reel.scrollWidth-reel.clientWidth/2;const m=$('#mark');const L=Qs[idx]&&Qs[idx].lay;if(L){const y=yOf(L.p,L.c,L.y);m.style.top=(y+10*scale)+'px';m.style.height=(22*scale)+'px';markX(L)}}
+let zoomBusy=false;
+async function rezoom(f){
+  const nz=Math.min(ZMAX,Math.max(ZMIN,zoom*f)); if(Math.abs(nz-zoom)<.01||zoomBusy){zoomHint();return}
+  zoomBusy=true; const a=anchor(); zoom=nz; await layoutReel(); restore(a); zoomBusy=false; zoomHint();
+}
+function zoomHint(){const e=$('#zhint');e.textContent=Math.round(zoom*100)+'%';e.classList.add('on');clearTimeout(zoomHint.t);zoomHint.t=setTimeout(()=>e.classList.remove('on'),900);
+  $('#tzout').style.opacity=zoom<=ZMIN+.01?.35:1;$('#tzin').style.opacity=zoom>=ZMAX-.01?.35:1}
 $('#tzin').onclick=()=>rezoom(1.25); $('#tzout').onclick=()=>rezoom(0.8);
+/* pinch to zoom on the exam paper */
+(()=>{const reel=$('#reel'),box=$('#segs');let d0=0,f=1,ox=0,oy=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  reel.addEventListener('touchstart',e=>{if(e.touches.length===2){d0=dist(e.touches);f=1;const r=reel.getBoundingClientRect();
+    ox=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left+reel.scrollLeft;oy=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top+reel.scrollTop;box.style.transformOrigin=`${ox}px ${oy}px`}},{passive:true});
+  reel.addEventListener('touchmove',e=>{if(d0&&e.touches.length===2){e.preventDefault();f=Math.min(ZMAX/zoom,Math.max(ZMIN/zoom,dist(e.touches)/d0));box.style.transform=`scale(${f})`}},{passive:false});
+  reel.addEventListener('touchend',e=>{if(d0&&e.touches.length<2){const k=f;d0=0;box.style.transform='';if(Math.abs(k-1)>.05)rezoom(k)}},{passive:true});
+})();
 function placeTools(){const r=$('#reel').getBoundingClientRect();$('#tools').style.top=(r.top+10)+'px'}
-addEventListener('resize',()=>{if($('#play').classList.contains('on')){placeTools();layoutReel().then(()=>scrollToQ(false))}});
+let rzT;addEventListener('resize',()=>{if(!$('#play').classList.contains('on'))return;clearTimeout(rzT);rzT=setTimeout(async()=>{placeTools();const a=anchor();await layoutReel();restore(a)},200)});
 
 /* ---------- play ---------- */
 function hud(){
