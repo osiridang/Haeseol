@@ -2,7 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121419" media="(prefers-color-scheme: dark)">
 <title>Haeseol · 수능 해설 AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
@@ -110,6 +112,63 @@ textarea{min-height:90px;resize:vertical}
 .hitem .s{color:var(--ink3);font-size:12px;margin-left:auto}
 footer{border-top:1px solid var(--line);padding:22px 0;color:var(--ink3);font-size:12px}
 .hide{display:none!important}
+.mob-only{display:none}
+.btn{min-height:44px}
+.btn.small{min-height:36px}
+select,input[type=text],textarea{font-size:16px}
+
+/* ---------- mobile ---------- */
+@media (max-width:640px){
+  .mob-only{display:inline}
+  .desk-only{display:none}
+  .wrap{padding:0 16px}
+  header{padding-top:env(safe-area-inset-top)}
+  .bar{height:52px}
+  .logo{font-size:19px}
+  nav{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:10;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+      background:var(--card);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+  nav a{text-align:center;padding:11px 0;font-size:14px;border-radius:10px}
+  nav a.on{background:var(--accent-soft);color:var(--accent)}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .hero{padding:22px 0 12px}
+  h1{font-size:26px;letter-spacing:-.6px}
+  .hero h1[style]{font-size:22px!important}
+  .lead{font-size:15px}
+  .card{padding:16px;border-radius:12px}
+  h2{font-size:16px}
+  /* schedule as a list */
+  .sched{gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .period{display:grid;grid-template-columns:52px 1fr auto;column-gap:10px;align-items:center;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:12px}
+  .period:last-child{border-bottom:0}
+  .period .no{grid-column:1;grid-row:1/span 2}
+  .period .nm{grid-column:2;grid-row:1;font-size:15px;margin:0;line-height:1.3}
+  .period .tm{grid-column:2;grid-row:2;font-size:12px}
+  .period .pill{grid-column:3;grid-row:1/span 2;margin:0;white-space:nowrap}
+  .period a.go{grid-column:2/span 2;grid-row:3;margin-top:6px;padding:4px 0}
+  .period.is-next{box-shadow:none;background:var(--accent-soft)}
+  .steps3{gap:8px;margin-top:14px}
+  .step{padding:12px 14px}
+  .cta .btn{flex:1;text-align:center;display:flex;align-items:center;justify-content:center}
+  /* solve */
+  .row{gap:8px}
+  .row>div:last-child{flex:0 0 96px}
+  .drop{padding:22px 14px}
+  .thumb img{width:72px;height:72px}
+  .thumb button{width:26px;height:26px}
+  .ans{padding:12px;gap:12px}
+  .ans .big{font-size:32px;min-width:44px}
+  .verdict .btn.small{display:block;margin:10px 0 0!important;width:100%}
+  .choice{grid-template-columns:30px 1fr}
+  .stream{max-height:160px}
+  /* grading */
+  .score{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .score .k{min-width:0;padding:10px}
+  .score .k b{font-size:20px}
+  .omr{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px}
+  .cell{padding:6px 2px;font-size:11px}
+  .hitem{padding:12px}
+  footer{padding:18px 0 22px}
+}
 </style>
 </head>
 <body>
@@ -161,10 +220,10 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--ink3);font-si
             <option>국어</option><option selected>수학</option><option>영어</option><option>한국사</option>
             <option>사회탐구</option><option>과학탐구</option><option>직업탐구</option><option>제2외국어/한문</option>
           </select></div>
-        <div><label class="lb" for="qno">문항 번호</label><input id="qno" type="text" placeholder="예: 22"></div>
+        <div><label class="lb" for="qno">문항 번호</label><input id="qno" type="text" inputmode="numeric" placeholder="예: 22"></div>
       </div>
       <label class="lb">문항 이미지</label>
-      <div class="drop" id="drop" tabindex="0">클릭해서 선택 · 끌어다 놓기 · Ctrl+V 붙여넣기<br><span style="font-size:12px">지문과 문항이 여러 장이면 모두 올리세요</span></div>
+      <div class="drop" id="drop" tabindex="0" role="button"><span class="desk-only">클릭해서 선택 · 끌어다 놓기 · Ctrl+V 붙여넣기</span><span class="mob-only"><b>사진 찍기 · 앨범에서 선택</b></span><br><span style="font-size:12px">지문과 문항이 여러 장이면 모두 올리세요</span></div>
       <input type="file" id="file" accept="image/*" multiple class="hide">
       <div class="thumbs" id="thumbs"></div>
       <label class="lb" for="qtext">또는 문항 텍스트 (선택)</label>
@@ -321,6 +380,7 @@ async function solve(extra){
   running?.abort(); running=new AbortController();
   $('#empty').classList.add('hide');
   $('#go').disabled=true;
+  if(matchMedia('(max-width:859px)').matches)$('#result').scrollIntoView({behavior:'smooth',block:'start'});
   $('#out').innerHTML='<div class="verdict hm"><span class="spin"></span>문항을 읽고 풀고 있어요… 수학 킬러 문항은 1분 넘게 걸릴 수 있어요.</div><div class="stream" id="stream">생각 중…</div>';
   try{
     const opts={signal:running.signal,modelTier:'complex',onText:({text})=>{const s=$('#stream');if(s){s.textContent=text;s.scrollTop=s.scrollHeight}}};
